@@ -1,53 +1,55 @@
 from pathlib import Path
+from itertools import batched
 
 input_file = Path(__file__).parent / "input.txt"
-input = input_file.read_text()
+input = input_file.read_text().strip()
 
 test_input_1 = "2333133121414131402"
 test_input_2 = "12345"
+test_input_3 = input[:21]
 
 
-INPUT = test_input_1
+INPUT = input
 
 
-def parse_memory_block(input: str) -> str:
+def parse_memory_block(input: str) -> list[str]:
     input = input.strip()
-    result = ""
+    result = []
     is_file = True
     file_counter = 0
-    for letter in input:
+    for char in input:
         if is_file:
-            result += str(file_counter) * int(letter)
+            result.extend([file_counter for _ in range(int(char))])
             file_counter += 1
         else:
-            result += "." * int(letter)
+            result.extend([c for c in "." * int(char)])
 
         is_file = not is_file
 
     return result
 
 
-def compress_block(input: str) -> str:
-    result = [letter for letter in input]
-    # print(result)
+def compress_block(input: list[str]) -> list[str]:
+    result = input.copy()
+    front = 0
+    end = len(result) - 1
 
-    while "." in result:
-        if result[-1] == ".":
-            result.pop()
-        else:
-            free_index = result.index(".")
-            result[free_index] = result.pop()
-        # print(result)
+    while True:
+        while result[front] != ".":
+            front += 1
 
-    while len(result) < len(input):
-        result.append(".")
+        while result[end] == ".":
+            end -= 1
 
-    # print(result)
+        if front >= end:
+            break
 
-    return "".join(result)
+        result[front], result[end] = result[end], result[front]
+
+    return result
 
 
-def compute_checksum(input: str) -> int:
+def compute_checksum(input: list[str]) -> int:
     total = 0
 
     for i, letter in enumerate(input):
@@ -57,9 +59,9 @@ def compute_checksum(input: str) -> int:
 
     return total
 
+
 def part_1():
     disk_map = parse_memory_block(INPUT)
-    # print(disk_map)
     compressed = compress_block(disk_map)
     print(compute_checksum(compressed))
 
